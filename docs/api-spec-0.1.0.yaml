@@ -1,0 +1,22 @@
+openapi: 3.0.1
+info:
+  title: "spring-web-essentials-blog-api"
+  version: "0.1.0"
+  description:
+    Initial specification for the food blog example Application
+    Programming Interface (API) in the Spring Web Development
+    Essentials book.
+
+paths:
+  /api/articles:
+    post:
+      summary: Post a new blog article
+      responses:
+        '201':
+          description: The blog post was created successfully
+          headers:
+            Location:
+              description: The location of the newly created blog post
+              schema:
+                type: string
+          content: {}
