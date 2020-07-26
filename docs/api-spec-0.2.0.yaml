@@ -1,0 +1,64 @@
+openapi: 3.0.1
+info:
+  title: "spring-web-essentials-blog-api"
+  version: "0.2.0"
+  description:
+    Specification for the food blog example Application
+    Programming Interface (API) in the Spring Web Development
+    Essentials book. This version includes the object model.
+paths:
+  /api/articles:
+    post:
+      summary: Post a new blog article
+      requestBody:
+        description: New food blog article
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlogPost'
+      responses:
+        '201':
+          description:
+            The blog post was created successfully and the
+            response body has a representation of the newly
+            saved article
+          headers:
+            Location:
+              description:
+                The location of the newly created blog post
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlogPost'
+
+components:
+  schemas:
+    BlogPost:
+      type: object
+      description: Representation of an article posted to our blog
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: The article ID
+          default: 0
+        category:
+          type: string
+          description: The category group for this article
+          default: null
+        datePosted:
+          type: string
+          format: date-time
+          description: RFC 3339 formatted date the article was posted
+          default: null
+        title:
+          type: string
+          description: Blog post title
+          default: null
+        content:
+          type: string
+          description: Markdown blog post content
+          default: null
