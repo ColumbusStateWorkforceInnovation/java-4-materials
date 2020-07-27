@@ -1,9 +1,13 @@
 package com.spankinfresh.blog.domain;
 
 import java.time.LocalDateTime;
+import javax.persistence.*;
 
+@Entity
 public class BlogPost {
 
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private long id;
   private String category;
   private LocalDateTime datePosted;
