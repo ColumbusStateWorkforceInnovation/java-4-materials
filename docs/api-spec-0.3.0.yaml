@@ -1,0 +1,83 @@
+openapi: "3.0.1"
+info:
+  title: "spring-web-essentials-blog-api"
+  version: "0.3.0"
+  description:
+    Specification for the food blog example Application
+    Programming Interface (API) in the Spring Web Development
+    Essentials book. This version reflects changes made
+    by adding a database.
+paths:
+  /api/articles:
+    post:
+      summary: Post a new blog article
+      requestBody:
+        description: New food blog article
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewBlogPost'
+      responses:
+        '201':
+          description:
+            The blog post was created successfully and the
+            response body has a representation of the newly
+            saved article
+          headers:
+            Location:
+              description:
+                The location of the newly created blog post
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedBlogPost'
+
+components:
+  schemas:
+    SavedBlogPost:
+      type: object
+      description:
+        Representation of a previously saved article posted
+        to our blog
+      properties:
+        id:
+          type: integer
+          description: The article ID
+          nullable: false
+          minimum: 1
+        category:
+          type: string
+          description: The category group for this article
+          default: null
+        datePosted:
+          type: string
+          format: date-time
+          description: RFC 3339 formatted date the article was posted
+          default: set automatically when first saved
+        title:
+          type: string
+          description: Blog post title
+          default: null
+        content:
+          type: string
+          description: Markdown blog post content
+          default: null
+    NewBlogPost:
+      type: object
+      description: Representation of a new article to be saved
+      properties:
+        category:
+          type: string
+          description: The category group for this article
+          default: null
+        title:
+          type: string
+          description: Blog post title
+          default: null
+        content:
+          type: string
+          description: Markdown blog post content
+          default: null
