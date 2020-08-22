@@ -45,10 +45,10 @@ public class BlogPostController {
   @GetMapping("{id}")
   public ResponseEntity<Iterable<BlogPost>> getItemById(
     @PathVariable Long id) {
-    Optional<BlogPost> searchResult = blogPostRepository.findById(id);
-    if (searchResult.isPresent()) {
+    Optional<BlogPost> blogPost = blogPostRepository.findById(id);
+    if (blogPost.isPresent()) {
       return new ResponseEntity<>(
-        Collections.singletonList(searchResult.get()),HttpStatus.OK);
+        Collections.singletonList(blogPost.get()),HttpStatus.OK);
     }
     return new ResponseEntity<>(HttpStatus.NOT_FOUND);
   }
@@ -56,9 +56,6 @@ public class BlogPostController {
   @PutMapping("{id}")
   public ResponseEntity<BlogPost> updateBlogEntry(@PathVariable Long id,
     @RequestBody BlogPost blogEntry) {
-    if (blogEntry.getId() != id) {
-      return new ResponseEntity<>(HttpStatus.CONFLICT);
-    }
     if (blogPostRepository.existsById(id)) {
       blogPostRepository.save(blogEntry);
       return new ResponseEntity<>(HttpStatus.NO_CONTENT);
