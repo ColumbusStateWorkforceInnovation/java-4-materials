@@ -5,14 +5,13 @@ import com.spankinfresh.blog.domain.BlogPost;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -37,5 +36,42 @@ public class BlogPostController {
     headers.add("Location", uriComponents.toUri().toString());
     return new ResponseEntity<>(savedItem, headers, HttpStatus.CREATED);
   }
+
+  @GetMapping
+  public Iterable<BlogPost> getAllItems () {
+    return blogPostRepository.findAll();
+  }
+
+  @GetMapping("{id}")
+  public ResponseEntity<Iterable<BlogPost>> getItemById(
+    @PathVariable Long id) {
+    Optional<BlogPost> blogPost = blogPostRepository.findById(id);
+    if (blogPost.isPresent()) {
+      return new ResponseEntity<>(
+        Collections.singletonList(blogPost.get()),HttpStatus.OK);
+    }
+    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+  }
+
+  @PutMapping("{id}")
+  public ResponseEntity<BlogPost> updateBlogEntry(@PathVariable Long id,
+    @RequestBody BlogPost blogEntry) {
+    if (blogPostRepository.existsById(id)) {
+      blogPostRepository.save(blogEntry);
+      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+  }
+
+  @DeleteMapping("{id}")
+  public ResponseEntity<BlogPost> deleteBlogEntryById(@PathVariable Long id) {
+    Optional<BlogPost> blogEntry = blogPostRepository.findById(id);
+    if (blogEntry.isPresent()) {
+      blogPostRepository.delete(blogEntry.get());
+      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+    return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+  }
+
 
 }
