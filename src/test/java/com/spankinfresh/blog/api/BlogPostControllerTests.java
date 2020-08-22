@@ -34,13 +34,14 @@ public class BlogPostControllerTests {
   private static final BlogPost testPosting =
     new BlogPost(0L, "category", null, "title", "content");
   private static final BlogPost savedPosting =
-    new BlogPost(1, "category", LocalDateTime.now(), "title", "content");
+    new BlogPost(1L, "category", LocalDateTime.now(), "title", "content");
 
   @Test
   @DisplayName("T01 - POST accepts and returns blog post representation")
   public void postCreatesNewBlogEntry_Test(@Autowired MockMvc mockMvc)
     throws Exception {
-    when(mockRepository.save(refEq(testPosting, "datePosted"))).thenReturn(savedPosting);
+    when(mockRepository.save(refEq(testPosting, "datePosted")))
+      .thenReturn(savedPosting);
     MvcResult result = mockMvc.perform(post(RESOURCE_URI)
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(testPosting)))
