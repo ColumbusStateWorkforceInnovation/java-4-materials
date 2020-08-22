@@ -1,7 +1,12 @@
 package com.spankinfresh.blog.domain;
 
-import javax.persistence.*;
-import java.util.Date;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import java.time.LocalDateTime;
 
 @Entity
 public class BlogPost {
@@ -10,14 +15,15 @@ public class BlogPost {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private long id;
   private String category;
-  @Temporal(TemporalType.TIMESTAMP)
-  private Date datePosted;
+  //@Temporal(TemporalType.TIMESTAMP)
+  @DateTimeFormat(iso=DateTimeFormat.ISO.DATE_TIME)
+  private LocalDateTime datePosted;
   private String title;
   private String content;
 
   public BlogPost() { }
 
-  public BlogPost(long id, String category, Date datePosted,
+  public BlogPost(long id, String category, LocalDateTime datePosted,
       String title, String content) {
     this.id = id;
     this.category = category;
@@ -42,11 +48,11 @@ public class BlogPost {
     this.category = category;
   }
 
-  public Date getDatePosted() {
+  public LocalDateTime getDatePosted() {
     return datePosted;
   }
 
-  public void setDatePosted(Date datePosted) {
+  public void setDatePosted(LocalDateTime datePosted) {
     this.datePosted = datePosted;
   }
 
