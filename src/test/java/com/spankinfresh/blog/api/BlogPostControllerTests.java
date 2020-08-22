@@ -42,9 +42,7 @@ public class BlogPostControllerTests {
   @DisplayName("T01 - POST accepts and returns blog post representation")
   public void postCreatesNewBlogEntry_Test(@Autowired MockMvc mockMvc)
     throws Exception {
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
-    //when(mockRepository.save(refEq(testPosting, "datePosted"))).thenReturn(savedPosting);
-    when(mockRepository.save(any(BlogPost.class))).thenReturn(savedPosting);
+    when(mockRepository.save(refEq(testPosting, "datePosted"))).thenReturn(savedPosting);
     MvcResult result = mockMvc.perform(post(RESOURCE_URI)
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(testPosting)))
@@ -54,7 +52,7 @@ public class BlogPostControllerTests {
       .andExpect(jsonPath(
         "$.title").value(savedPosting.getTitle()))
       .andExpect(jsonPath(
-        "$.datePosted").value(simpleDateFormat.format(savedPosting.getDatePosted())))
+        "$.datePosted").value(savedPosting.getDatePosted().toString()))
       .andExpect(jsonPath(
         "$.category").value(savedPosting.getCategory()))
       .andExpect(
@@ -65,6 +63,7 @@ public class BlogPostControllerTests {
       "http://localhost/api/articles/%d", savedPosting.getId()),
       mockResponse.getHeader("Location"));
     verify(mockRepository, times(1)).save(refEq(testPosting, "datePosted"));
+    verifyNoMoreInteractions(mockRepository);
   }
 
 }
