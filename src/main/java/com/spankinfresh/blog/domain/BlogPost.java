@@ -1,18 +1,18 @@
 package com.spankinfresh.blog.domain;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public class BlogPost {
 
   private long id;
   private String category;
-  private Date datePosted;
+  private LocalDateTime datePosted;
   private String title;
   private String content;
 
   public BlogPost() { }
 
-  public BlogPost(long id, String category, Date datePosted,
+  public BlogPost(long id, String category, LocalDateTime datePosted,
       String title, String content) {
     this.id = id;
     this.category = category;
@@ -37,11 +37,11 @@ public class BlogPost {
     this.category = category;
   }
 
-  public Date getDatePosted() {
+  public LocalDateTime getDatePosted() {
     return datePosted;
   }
 
-  public void setDatePosted(Date datePosted) {
+  public void setDatePosted(LocalDateTime datePosted) {
     this.datePosted = datePosted;
   }
 
