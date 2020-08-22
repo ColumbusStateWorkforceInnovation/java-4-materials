@@ -13,7 +13,6 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @RestController
 @RequestMapping("/api/articles")

@@ -1,5 +1,11 @@
 package com.spankinfresh.blog.domain;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 
@@ -10,6 +16,7 @@ public class BlogPost {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private long id;
   private String category;
+  @DateTimeFormat(iso=DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime datePosted;
   private String title;
   private String content;
