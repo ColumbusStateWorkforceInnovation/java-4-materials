@@ -104,7 +104,7 @@ public class BlogPostControllerTests {
   }
 
   @Test
-  @DisplayName("T04 - When a requested article does not exist, GET returns 404 not found")
+  @DisplayName("T04 - Requested article does not exist so GET returns 404")
   public void test_04(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(anyLong()))
       .thenReturn(Optional.empty());
@@ -115,7 +115,7 @@ public class BlogPostControllerTests {
   }
 
   @Test
-  @DisplayName("T05 - When a requested article exists, GET returns a single item list")
+  @DisplayName("T05 - Requested article exists so GET returns it in a list")
   public void test_05(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(anyLong()))
       .thenReturn(Optional.of(savedPosting));
@@ -138,34 +138,48 @@ public class BlogPostControllerTests {
   }
 
   @Test
-  @DisplayName("T06 - When a requested article does not exist, PUT returns 404 not found")
+  @DisplayName("T06 - Article to be updated does not exist so PUT returns 404")
   public void test_06(@Autowired MockMvc mockMvc) throws Exception {
-    when(mockRepository.existsById(1L)).thenReturn(false);
-    mockMvc.perform(put(RESOURCE_URI + "/1")
+    when(mockRepository.existsById(10L)).thenReturn(false);
+    mockMvc.perform(put(RESOURCE_URI + "/10")
       .contentType(MediaType.APPLICATION_JSON)
-      .content(mapper.writeValueAsString(testPosting)))
+      .content(mapper.writeValueAsString(
+        new BlogPost(10L, "category", null, "title", "content"))))
       .andExpect(status().isNotFound());
     verify(mockRepository, never()).save(any(BlogPost.class));
-    verify(mockRepository, times(1)).existsById(1L);
+    verify(mockRepository, times(1)).existsById(10L);
     verifyNoMoreInteractions(mockRepository);
   }
 
   @Test
-  @DisplayName("T07 -When a requested article exists, PUT updates it")
+  @DisplayName("T07 -  Article to be updated exists so PUT saves new copy")
   public void test_07(@Autowired MockMvc mockMvc) throws Exception {
-    when(mockRepository.existsById(1L)).thenReturn(true);
-    mockMvc.perform(put(RESOURCE_URI + "/1")
+    when(mockRepository.existsById(10L)).thenReturn(true);
+    mockMvc.perform(put(RESOURCE_URI + "/10")
       .contentType(MediaType.APPLICATION_JSON)
-      .content(mapper.writeValueAsString(testPosting)))
+      .content(mapper.writeValueAsString(
+        new BlogPost(10L, "category", null, "title", "content"))))
       .andExpect(status().isNoContent());
-    verify(mockRepository, times(1)).save(refEq(testPosting));
-    verify(mockRepository, times(1)).existsById(1L);
+    verify(mockRepository, times(1)).save(any(BlogPost.class));
+    verify(mockRepository, times(1)).existsById(10L);
     verifyNoMoreInteractions(mockRepository);
   }
 
   @Test
-  @DisplayName("T08 - When requested article does not exist, DELETE returns 404 not found")
+  @DisplayName("T08 - ID in PUT URL not equal to one in request body")
   public void test_08(@Autowired MockMvc mockMvc) throws Exception {
+    mockMvc.perform(put(RESOURCE_URI + "/100")
+      .contentType(MediaType.APPLICATION_JSON)
+      .content(mapper.writeValueAsString(
+        new BlogPost(10L, "category", null, "title", "content"))))
+      .andExpect(status().isConflict());
+    verify(mockRepository, never()).save(any(BlogPost.class));
+    verifyNoMoreInteractions(mockRepository);
+  }
+
+  @Test
+  @DisplayName("T09 - Article to be removed does not exist so DELETE returns 404")
+  public void test_09(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(1L))
       .thenReturn(Optional.empty());
     mockMvc.perform(delete(RESOURCE_URI + "/1"))
@@ -176,14 +190,13 @@ public class BlogPostControllerTests {
   }
 
   @Test
-  @DisplayName("T09 - When requested article exists, DELETE deletes it")
-  public void test_09(@Autowired MockMvc mockMvc) throws Exception {
+  @DisplayName("T10 - Article to be removed exists so DELETE deletes it")
+  public void test_10(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(1L))
       .thenReturn(Optional.of(testPosting));
     mockMvc.perform(delete(RESOURCE_URI + "/1"))
       .andExpect(status().isNoContent());
-    verify(mockRepository,
-      times(1)).delete(any(BlogPost.class));
+    verify(mockRepository, times(1)).delete(refEq(testPosting));
     verify(mockRepository, times(1)).findById(1L);
     verifyNoMoreInteractions(mockRepository);
   }
