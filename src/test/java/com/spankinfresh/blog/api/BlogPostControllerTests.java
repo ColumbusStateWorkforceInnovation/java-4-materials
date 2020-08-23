@@ -193,10 +193,10 @@ public class BlogPostControllerTests {
   @DisplayName("T10 - Article to be removed exists so DELETE deletes it")
   public void test_10(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(1L))
-      .thenReturn(Optional.of(testPosting));
+      .thenReturn(Optional.of(savedPosting));
     mockMvc.perform(delete(RESOURCE_URI + "/1"))
       .andExpect(status().isNoContent());
-    verify(mockRepository, times(1)).delete(refEq(testPosting));
+    verify(mockRepository, times(1)).delete(refEq(savedPosting));
     verify(mockRepository, times(1)).findById(1L);
     verifyNoMoreInteractions(mockRepository);
   }
