@@ -155,13 +155,14 @@ public class BlogPostControllerTests {
   @Test
   @DisplayName("T07 -When a requested article exists, PUT updates it")
   public void test_07(@Autowired MockMvc mockMvc) throws Exception {
-    when(mockRepository.existsById(1L)).thenReturn(true);
-    mockMvc.perform(put(RESOURCE_URI + "/1")
+    when(mockRepository.existsById(10L)).thenReturn(true);
+    mockMvc.perform(put(RESOURCE_URI + "/10")
       .contentType(MediaType.APPLICATION_JSON)
-      .content(mapper.writeValueAsString(testPosting)))
+      .content(mapper.writeValueAsString(
+        new BlogPost(10L, "category", null, "title", "content"))))
       .andExpect(status().isNoContent());
-    verify(mockRepository, times(1)).save(refEq(testPosting));
-    verify(mockRepository, times(1)).existsById(1L);
+    verify(mockRepository, times(1)).save(any(BlogPost.class));
+    verify(mockRepository, times(1)).existsById(10L);
     verifyNoMoreInteractions(mockRepository);
   }
 
