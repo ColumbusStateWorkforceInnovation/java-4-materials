@@ -230,9 +230,6 @@ public class BlogPostControllerTests {
     verify(mockRepository, never()).save(any(BlogPost.class));
   }
 
-  // https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-  // If the server specifies a single origin (that may dynamically change based on the requesting origin as part of a white-list) rather than the "*" wildcard, then the server should also include Origin in the Vary response header — to indicate to clients that server responses will differ based on the value of the Origin request header.
-
   @Test
   @DisplayName("T13 - Get requests have proper CORS headers")
   public void test_13 (@Autowired MockMvc mockMvc) throws Exception {
@@ -243,6 +240,31 @@ public class BlogPostControllerTests {
         header().stringValues(HttpHeaders.VARY,
         hasItems("Origin", "Access-Control-Request-Method",
           "Access-Control-Request-Headers")));
+  }
+
+  @Test
+  @DisplayName("T14 - Get by category name returns expected data")
+  public void test_14 (@Autowired MockMvc mockMvc) throws Exception {
+    when(mockRepository.findByCategoryOrderByDatePostedDesc("foo")).
+      thenReturn(Collections.singletonList(savedPosting));
+    mockMvc.perform(get(RESOURCE_URI + "/category")
+      .param("categoryName", "foo"))
+      .andExpect(jsonPath("$.length()").value(1))
+      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+      .andExpect(jsonPath(
+        "$.[0].id").value(savedPosting.getId()))
+      .andExpect(jsonPath(
+        "$.[0].title").value(savedPosting.getTitle()))
+      .andExpect(jsonPath(
+        "$.[0].datePosted").value(savedPosting.getDatePosted().toString()))
+      .andExpect(jsonPath(
+        "$.[0].category").value(savedPosting.getCategory()))
+      .andExpect(
+        jsonPath("$.[0].content").value(savedPosting.getContent()))
+      .andExpect(status().isOk());
+    verify(mockRepository, times(1))
+      .findByCategoryOrderByDatePostedDesc("foo");
+    verifyNoMoreInteractions(mockRepository);
   }
 
 }
