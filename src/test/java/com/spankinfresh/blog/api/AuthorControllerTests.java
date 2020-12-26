@@ -1,9 +1,8 @@
 package com.spankinfresh.blog.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.spankinfresh.blog.data.BlogPostRepository;
+import com.spankinfresh.blog.data.AuthorRepository;
 import com.spankinfresh.blog.domain.Author;
-import com.spankinfresh.blog.domain.BlogPost;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
@@ -29,55 +27,48 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class BlogPostControllerTests {
+public class AuthorControllerTests {
 
   @MockBean
-  private BlogPostRepository mockRepository;
+  private AuthorRepository mockRepository;
 
-  private static final String RESOURCE_URI = "/api/articles";
+  private static final String RESOURCE_URI = "/api/authors";
   private final ObjectMapper mapper = new ObjectMapper();
+  private static final Author testAuthor =
+    new Author(0L, "John", "Doe", "john@doe.com");
   private static final Author savedAuthor =
     new Author(1L, "Jane", "Doe", "jane@doe.com");
-  private static final BlogPost testPosting =
-    new BlogPost(0L, "category", null, "title", "content", savedAuthor);
-  private static final BlogPost savedPosting =
-    new BlogPost(1L, "category", LocalDateTime.now(), "title", "content", savedAuthor);
 
   @Test
-  @DisplayName("T01 - POST accepts and returns blog post representation")
-  public void postCreatesNewBlogEntry_Test(@Autowired MockMvc mockMvc)
+  @DisplayName("T01 - POST accepts and returns author representation")
+  public void test_01(@Autowired MockMvc mockMvc)
     throws Exception {
-    when(mockRepository.save(refEq(testPosting, "datePosted", "author")))
-      .thenReturn(savedPosting);
+    when(mockRepository.save(refEq(testAuthor))).thenReturn(savedAuthor);
     MvcResult result = mockMvc.perform(post(RESOURCE_URI)
       .contentType(MediaType.APPLICATION_JSON)
-      .content(mapper.writeValueAsString(testPosting)))
+      .content(mapper.writeValueAsString(testAuthor)))
       .andExpect(status().isCreated())
       .andExpect(jsonPath(
-        "$.id").value(savedPosting.getId()))
+        "$.id").value(savedAuthor.getId()))
       .andExpect(jsonPath(
-        "$.title").value(savedPosting.getTitle()))
+        "$.firstName").value(savedAuthor.getFirstName()))
       .andExpect(jsonPath(
-        "$.datePosted").value(savedPosting.getDatePosted().toString()))
-      .andExpect(jsonPath(
-        "$.category").value(savedPosting.getCategory()))
+        "$.lastName").value(savedAuthor.getLastName()))
       .andExpect(
-        jsonPath("$.content").value(savedPosting.getContent()))
-      .andExpect(
-        jsonPath("$.author.id").value(savedPosting.getAuthor().getId()))
+        jsonPath("$.emailAddress").value(savedAuthor.getEmailAddress()))
       .andReturn();
     MockHttpServletResponse mockResponse = result.getResponse();
     assertEquals(String.format(
-      "http://localhost/api/articles/%d", savedPosting.getId()),
+      "http://localhost/api/authors/%d", savedAuthor.getId()),
       mockResponse.getHeader("Location"));
-    verify(mockRepository, times(1)).save(refEq(testPosting, "datePosted", "author"));
+    verify(mockRepository, times(1)).save(refEq(testAuthor));
     verifyNoMoreInteractions(mockRepository);
   }
 
   @Test
   @DisplayName("T02 - When no articles exist, GET returns an empty list")
   public void test_02(@Autowired MockMvc mockMvc) throws Exception {
-    when(mockRepository.findAll()).thenReturn(new ArrayList<BlogPost>());
+    when(mockRepository.findAll()).thenReturn(new ArrayList<>());
     mockMvc.perform(get(RESOURCE_URI))
       .andExpect(jsonPath("$.length()").value(0))
       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -90,27 +81,25 @@ public class BlogPostControllerTests {
   @DisplayName("T03 - When one article exists, GET returns a list with it")
   public void test_03(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findAll()).
-      thenReturn(Collections.singletonList(savedPosting));
+      thenReturn(Collections.singletonList(savedAuthor));
     mockMvc.perform(get(RESOURCE_URI))
       .andExpect(jsonPath("$.length()").value(1))
       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
       .andExpect(jsonPath(
-        "$.[0].id").value(savedPosting.getId()))
+        "$.[0].id").value(savedAuthor.getId()))
       .andExpect(jsonPath(
-        "$.[0].title").value(savedPosting.getTitle()))
+        "$.[0].firstName").value(savedAuthor.getFirstName()))
       .andExpect(jsonPath(
-        "$.[0].datePosted").value(savedPosting.getDatePosted().toString()))
-      .andExpect(jsonPath(
-        "$.[0].category").value(savedPosting.getCategory()))
+        "$.[0].lastName").value(savedAuthor.getLastName()))
       .andExpect(
-        jsonPath("$.[0].content").value(savedPosting.getContent()))
+        jsonPath("$.[0].emailAddress").value(savedAuthor.getEmailAddress()))
       .andExpect(status().isOk());
     verify(mockRepository, times(1)).findAll();
     verifyNoMoreInteractions(mockRepository);
   }
 
   @Test
-  @DisplayName("T04 - When a requested article does not exist, GET returns 404 not found")
+  @DisplayName("T04 - Requested article does not exist so GET returns 404")
   public void test_04(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(anyLong()))
       .thenReturn(Optional.empty());
@@ -121,66 +110,63 @@ public class BlogPostControllerTests {
   }
 
   @Test
-  @DisplayName("T05 - When a requested article exists, GET returns a single item list")
+  @DisplayName("T05 - Requested article exists so GET returns it in a list")
   public void test_05(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(anyLong()))
-      .thenReturn(Optional.of(savedPosting));
+      .thenReturn(Optional.of(savedAuthor));
     mockMvc.perform(get(RESOURCE_URI + "/1"))
       .andExpect(jsonPath("$.length()").value(1))
       .andExpect(content().contentType(MediaType.APPLICATION_JSON))
       .andExpect(jsonPath(
-        "$.[0].id").value(savedPosting.getId()))
+        "$.[0].id").value(savedAuthor.getId()))
       .andExpect(jsonPath(
-        "$.[0].title").value(savedPosting.getTitle()))
+        "$.[0].firstName").value(savedAuthor.getFirstName()))
       .andExpect(jsonPath(
-        "$.[0].datePosted").value(savedPosting.getDatePosted().toString()))
-      .andExpect(jsonPath(
-        "$.[0].category").value(savedPosting.getCategory()))
+        "$.[0].lastName").value(savedAuthor.getLastName()))
       .andExpect(
-        jsonPath("$.[0].content").value(savedPosting.getContent()))
+        jsonPath("$.[0].emailAddress").value(savedAuthor.getEmailAddress()))
       .andExpect(status().isOk());
     verify(mockRepository, times(1)).findById(anyLong());
     verifyNoMoreInteractions(mockRepository);
   }
 
   @Test
-  @DisplayName("T06 - When a requested article does not exist, PUT returns 404 not found")
+  @DisplayName("T06 - Article to be updated does not exist so PUT returns 404")
   public void test_06(@Autowired MockMvc mockMvc) throws Exception {
-    when(mockRepository.existsById(1L)).thenReturn(false);
-    mockMvc.perform(put(RESOURCE_URI + "/1")
-      .contentType(MediaType.APPLICATION_JSON)
-      .content(mapper.writeValueAsString(testPosting)))
-      .content(mapper.writeValueAsString(
-        new BlogPost(10L, "category", null, "title", "content", savedAuthor))))
-      .andExpect(status().isNotFound());
-    verify(mockRepository, never()).save(any(BlogPost.class));
-    verify(mockRepository, times(1)).existsById(1L);
-    verifyNoMoreInteractions(mockRepository);
-  }
-
-  @Test
-  @DisplayName("T07 -When a requested article exists, PUT updates it")
-  public void test_07(@Autowired MockMvc mockMvc) throws Exception {
-    when(mockRepository.existsById(10L)).thenReturn(true);
+    when(mockRepository.existsById(10L)).thenReturn(false);
     mockMvc.perform(put(RESOURCE_URI + "/10")
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(
-        new BlogPost(10L, "category", null, "title", "content", savedAuthor))))
-      .andExpect(status().isNoContent());
-    verify(mockRepository, times(1)).save(any(BlogPost.class));
+        new Author(10L, "firstName", "lastName", "emailAddress"))))
+      .andExpect(status().isNotFound());
+    verify(mockRepository, never()).save(any(Author.class));
     verify(mockRepository, times(1)).existsById(10L);
     verifyNoMoreInteractions(mockRepository);
   }
 
   @Test
-  @DisplayName("T08 - When requested article does not exist, DELETE returns 404 not found")
+  @DisplayName("T07 -  Article to be updated exists so PUT saves new copy")
+  public void test_07(@Autowired MockMvc mockMvc) throws Exception {
+    when(mockRepository.existsById(10L)).thenReturn(true);
+    mockMvc.perform(put(RESOURCE_URI + "/10")
+      .contentType(MediaType.APPLICATION_JSON)
+      .content(mapper.writeValueAsString(
+        new Author(10L, "firstName", "lastName", "emailAddress"))))
+      .andExpect(status().isNoContent());
+    verify(mockRepository, times(1)).save(any(Author.class));
+    verify(mockRepository, times(1)).existsById(10L);
+    verifyNoMoreInteractions(mockRepository);
+  }
+
+  @Test
+  @DisplayName("T08 - ID in PUT URL not equal to one in request body")
   public void test_08(@Autowired MockMvc mockMvc) throws Exception {
     mockMvc.perform(put(RESOURCE_URI + "/100")
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(
-        new BlogPost(10L, "category", null, "title", "content", savedAuthor))))
+        new Author(10L, "firstName", "lastName", "emailAddress"))))
       .andExpect(status().isConflict());
-    verify(mockRepository, never()).save(any(BlogPost.class));
+    verify(mockRepository, never()).save(any(Author.class));
     verifyNoMoreInteractions(mockRepository);
   }
 
@@ -191,20 +177,19 @@ public class BlogPostControllerTests {
       .thenReturn(Optional.empty());
     mockMvc.perform(delete(RESOURCE_URI + "/1"))
       .andExpect(status().isNotFound());
-    verify(mockRepository, never()).delete(any(BlogPost.class));
+    verify(mockRepository, never()).delete(any(Author.class));
     verify(mockRepository, times(1)).findById(1L);
     verifyNoMoreInteractions(mockRepository);
   }
 
   @Test
-  @DisplayName("T09 - When requested article exists, DELETE deletes it")
-  public void test_09(@Autowired MockMvc mockMvc) throws Exception {
+  @DisplayName("T10 - Article to be removed exists so DELETE deletes it")
+  public void test_10(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(1L))
-      .thenReturn(Optional.of(testPosting));
+      .thenReturn(Optional.of(savedAuthor));
     mockMvc.perform(delete(RESOURCE_URI + "/1"))
       .andExpect(status().isNoContent());
-    verify(mockRepository,
-      times(1)).delete(any(BlogPost.class));
+    verify(mockRepository, times(1)).delete(refEq(savedAuthor));
     verify(mockRepository, times(1)).findById(1L);
     verifyNoMoreInteractions(mockRepository);
   }
@@ -214,9 +199,9 @@ public class BlogPostControllerTests {
   public void test_11(@Autowired MockMvc mockMvc) throws Exception {
      mockMvc.perform(post(RESOURCE_URI)
       .contentType(MediaType.APPLICATION_JSON)
-      .content(mapper.writeValueAsString(new BlogPost())))
+      .content(mapper.writeValueAsString(new Author())))
       .andExpect(status().isBadRequest());
-    verify(mockRepository, never()).save(any(BlogPost.class));
+    verify(mockRepository, never()).save(any(Author.class));
     verifyNoMoreInteractions(mockRepository);
   }
 
@@ -225,76 +210,37 @@ public class BlogPostControllerTests {
   public void test_12(@Autowired MockMvc mockMvc) throws Exception {
     mockMvc.perform(post(RESOURCE_URI)
       .contentType(MediaType.APPLICATION_JSON)
-      .content(mapper.writeValueAsString(new BlogPost())))
+      .content(mapper.writeValueAsString(new Author())))
       .andExpect(status().isBadRequest())
-      .andExpect(jsonPath("$.fieldErrors.category")
+      .andExpect(jsonPath("$.fieldErrors.lastName")
         .value("must not be null"))
-      .andExpect(jsonPath("$.fieldErrors.title")
+      .andExpect(jsonPath("$.fieldErrors.firstName")
         .value("must not be null"))
-      .andExpect(jsonPath("$.fieldErrors.content")
+      .andExpect(jsonPath("$.fieldErrors.emailAddress")
         .value("must not be null"));
 
     mockMvc.perform(post(RESOURCE_URI)
       .contentType(MediaType.APPLICATION_JSON)
-      .content(mapper.writeValueAsString(new BlogPost(0L, "",
-        null, "", "", savedAuthor))))
+      .content(mapper.writeValueAsString(
+        new Author(0L, "", "", ""))))
       .andExpect(status().isBadRequest())
-      .andExpect(jsonPath("$.fieldErrors.category").value(
-        "Please enter a category name of up to 200 characters"))
-      .andExpect(jsonPath("$.fieldErrors.title").value(
-        "Please enter a title up to 200 characters in length"))
-      .andExpect(
-        jsonPath("$.fieldErrors.content")
-          .value("Content is required"));
-    verify(mockRepository, never()).save(any(BlogPost.class));
+      .andExpect(jsonPath("$.fieldErrors.lastName").value(
+        "Last name should be between 1 and 80 characters"))
+      .andExpect(jsonPath("$.fieldErrors.firstName").value(
+        "First name should be between 1 and 80 characters"));
+    verify(mockRepository, never()).save(any(Author.class));
   }
 
   @Test
   @DisplayName("T13 - Get requests have proper CORS headers")
   public void test_13 (@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findAll()).
-      thenReturn(Collections.singletonList(savedPosting));
+      thenReturn(Collections.singletonList(savedAuthor));
     mockMvc.perform(get(RESOURCE_URI))
       .andExpect(status().isOk()).andExpect(
         header().stringValues(HttpHeaders.VARY,
         hasItems("Origin", "Access-Control-Request-Method",
           "Access-Control-Request-Headers")));
   }
-
-  @Test
-  @DisplayName("T14 - Get by category name returns expected data")
-  public void test_14 (@Autowired MockMvc mockMvc) throws Exception {
-    when(mockRepository.findByCategoryOrderByDatePostedDesc("foo")).
-      thenReturn(Collections.singletonList(savedPosting));
-    mockMvc.perform(get(RESOURCE_URI + "/category")
-      .param("categoryName", "foo"))
-      .andExpect(jsonPath("$.length()").value(1))
-      .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-      .andExpect(jsonPath(
-        "$.[0].id").value(savedPosting.getId()))
-      .andExpect(jsonPath(
-        "$.[0].title").value(savedPosting.getTitle()))
-      .andExpect(jsonPath(
-        "$.[0].datePosted").value(savedPosting.getDatePosted().toString()))
-      .andExpect(jsonPath(
-        "$.[0].category").value(savedPosting.getCategory()))
-      .andExpect(
-        jsonPath("$.[0].content").value(savedPosting.getContent()))
-      .andExpect(status().isOk());
-    verify(mockRepository, times(1))
-      .findByCategoryOrderByDatePostedDesc("foo");
-    verifyNoMoreInteractions(mockRepository);
-  }
-
-  @Test
-  @DisplayName("T15 - Get by category without a category = bad request")
-  public void test_15 (@Autowired MockMvc mockMvc) throws Exception {
-    mockMvc.perform(get(RESOURCE_URI + "/category"))
-      .andExpect(status().isBadRequest());
-    verify(mockRepository, never()).
-      findByCategoryOrderByDatePostedDesc(anyString());
-    verifyNoMoreInteractions(mockRepository);
-  }
-
 
 }
