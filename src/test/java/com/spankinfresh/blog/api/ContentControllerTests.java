@@ -1,6 +1,7 @@
 package com.spankinfresh.blog.api;
 
 import com.spankinfresh.blog.data.BlogPostJdbcTemplateRepository;
+import com.spankinfresh.blog.domain.Author;
 import com.spankinfresh.blog.domain.BlogPost;
 import com.spankinfresh.blog.domain.Category;
 import org.checkerframework.checker.units.qual.C;
@@ -29,7 +30,7 @@ public class ContentControllerTests {
   BlogPostJdbcTemplateRepository mockRepository;
 
   private static final BlogPost savedPosting = new BlogPost(1L,
-    "category", LocalDateTime.now(), "title", null);
+    "category", LocalDateTime.now(), "title", null, new Author());
 
   @Test
   @DisplayName("T01 - Get summary articles returns data ")
