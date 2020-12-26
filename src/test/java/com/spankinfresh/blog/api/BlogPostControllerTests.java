@@ -267,4 +267,15 @@ public class BlogPostControllerTests {
     verifyNoMoreInteractions(mockRepository);
   }
 
+  @Test
+  @DisplayName("T15 - Get by category without a category = bad request")
+  public void test_15 (@Autowired MockMvc mockMvc) throws Exception {
+    mockMvc.perform(get(RESOURCE_URI + "/category"))
+      .andExpect(status().isBadRequest());
+    verify(mockRepository, never()).
+      findByCategoryOrderByDatePostedDesc(anyString());
+    verifyNoMoreInteractions(mockRepository);
+  }
+
+
 }
