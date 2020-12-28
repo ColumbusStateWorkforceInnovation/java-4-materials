@@ -24,6 +24,7 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -49,7 +50,7 @@ public class BlogPostControllerTests {
     throws Exception {
     when(mockRepository.save(refEq(testPosting, "datePosted", "author")))
       .thenReturn(savedPosting);
-    MvcResult result = mockMvc.perform(post(RESOURCE_URI)
+    MvcResult result = mockMvc.perform(post(RESOURCE_URI).with(jwt())
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(testPosting)))
       .andExpect(status().isCreated())
@@ -146,15 +147,14 @@ public class BlogPostControllerTests {
   @Test
   @DisplayName("T06 - When a requested article does not exist, PUT returns 404 not found")
   public void test_06(@Autowired MockMvc mockMvc) throws Exception {
-    when(mockRepository.existsById(1L)).thenReturn(false);
-    mockMvc.perform(put(RESOURCE_URI + "/1")
+    when(mockRepository.existsById(10L)).thenReturn(false);
+    mockMvc.perform(put(RESOURCE_URI + "/10").with(jwt())
       .contentType(MediaType.APPLICATION_JSON)
-      .content(mapper.writeValueAsString(testPosting)))
       .content(mapper.writeValueAsString(
         new BlogPost(10L, "category", null, "title", "content", savedAuthor))))
       .andExpect(status().isNotFound());
     verify(mockRepository, never()).save(any(BlogPost.class));
-    verify(mockRepository, times(1)).existsById(1L);
+    verify(mockRepository, times(1)).existsById(10L);
     verifyNoMoreInteractions(mockRepository);
   }
 
@@ -162,7 +162,7 @@ public class BlogPostControllerTests {
   @DisplayName("T07 -When a requested article exists, PUT updates it")
   public void test_07(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.existsById(10L)).thenReturn(true);
-    mockMvc.perform(put(RESOURCE_URI + "/10")
+    mockMvc.perform(put(RESOURCE_URI + "/10").with(jwt())
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(
         new BlogPost(10L, "category", null, "title", "content", savedAuthor))))
@@ -175,7 +175,7 @@ public class BlogPostControllerTests {
   @Test
   @DisplayName("T08 - When requested article does not exist, DELETE returns 404 not found")
   public void test_08(@Autowired MockMvc mockMvc) throws Exception {
-    mockMvc.perform(put(RESOURCE_URI + "/100")
+    mockMvc.perform(put(RESOURCE_URI + "/100").with(jwt())
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(
         new BlogPost(10L, "category", null, "title", "content", savedAuthor))))
@@ -189,7 +189,7 @@ public class BlogPostControllerTests {
   public void test_09(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(1L))
       .thenReturn(Optional.empty());
-    mockMvc.perform(delete(RESOURCE_URI + "/1"))
+    mockMvc.perform(delete(RESOURCE_URI + "/1").with(jwt()))
       .andExpect(status().isNotFound());
     verify(mockRepository, never()).delete(any(BlogPost.class));
     verify(mockRepository, times(1)).findById(1L);
@@ -197,11 +197,11 @@ public class BlogPostControllerTests {
   }
 
   @Test
-  @DisplayName("T09 - When requested article exists, DELETE deletes it")
-  public void test_09(@Autowired MockMvc mockMvc) throws Exception {
+  @DisplayName("T10 - Article to be removed exists so DELETE deletes it")
+  public void test_10(@Autowired MockMvc mockMvc) throws Exception {
     when(mockRepository.findById(1L))
-      .thenReturn(Optional.of(testPosting));
-    mockMvc.perform(delete(RESOURCE_URI + "/1"))
+      .thenReturn(Optional.of(savedPosting));
+    mockMvc.perform(delete(RESOURCE_URI + "/1").with(jwt()))
       .andExpect(status().isNoContent());
     verify(mockRepository,
       times(1)).delete(any(BlogPost.class));
@@ -212,7 +212,7 @@ public class BlogPostControllerTests {
   @Test
   @DisplayName("T11 - POST returns 400 if all required properties are not set")
   public void test_11(@Autowired MockMvc mockMvc) throws Exception {
-     mockMvc.perform(post(RESOURCE_URI)
+     mockMvc.perform(post(RESOURCE_URI).with(jwt())
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(new BlogPost())))
       .andExpect(status().isBadRequest());
@@ -223,7 +223,7 @@ public class BlogPostControllerTests {
   @Test
   @DisplayName("T12 - Field errors present for each invalid property")
   public void test_12(@Autowired MockMvc mockMvc) throws Exception {
-    mockMvc.perform(post(RESOURCE_URI)
+    mockMvc.perform(post(RESOURCE_URI).with(jwt())
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(new BlogPost())))
       .andExpect(status().isBadRequest())
@@ -234,7 +234,7 @@ public class BlogPostControllerTests {
       .andExpect(jsonPath("$.fieldErrors.content")
         .value("must not be null"));
 
-    mockMvc.perform(post(RESOURCE_URI)
+    mockMvc.perform(post(RESOURCE_URI).with(jwt())
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(new BlogPost(0L, "",
         null, "", "", savedAuthor))))
