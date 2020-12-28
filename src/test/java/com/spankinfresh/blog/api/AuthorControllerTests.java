@@ -243,4 +243,36 @@ public class AuthorControllerTests {
           "Access-Control-Request-Headers")));
   }
 
+  @Test
+  @DisplayName("ST01: POST without JWT is forbidden")
+  public void sTest01(@Autowired MockMvc mockMvc) throws Exception {
+    when(mockRepository.save(any(Author.class)))
+            .thenReturn(savedAuthor);
+    mockMvc.perform(post(RESOURCE_URI)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsString(savedAuthor)))
+            .andExpect(status().isForbidden());
+    verify(mockRepository, never()).save(any(Author.class));
+  }
+
+  @Test
+  @DisplayName("ST02: PUT without JWT is forbidden")
+  public void sTest02(@Autowired MockMvc mockMvc) throws Exception {
+    when(mockRepository.existsById(anyLong())).thenReturn(true);
+    mockMvc.perform(put(RESOURCE_URI + "/1")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsString(savedAuthor)))
+            .andExpect(status().isForbidden());
+    verify(mockRepository, never()).save(any(Author.class));
+  }
+
+  @Test
+  @DisplayName("ST03: DELETE without JWT is forbidden")
+  public void sTest03(@Autowired MockMvc mockMvc) throws Exception {
+    when(mockRepository.findById(1L)) .thenReturn(Optional.of(savedAuthor));
+    mockMvc.perform(delete(RESOURCE_URI + "/1"))
+            .andExpect(status().isForbidden());
+    verify(mockRepository, never()).delete(any(Author.class));
+  }
+
 }
