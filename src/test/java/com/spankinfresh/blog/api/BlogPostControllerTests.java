@@ -173,15 +173,15 @@ public class BlogPostControllerTests {
   }
 
   @Test
-  @DisplayName("T08 - When requested article does not exist, DELETE returns 404 not found")
+  @DisplayName("T08 - When requested article does not exist, PUT returns 404 not found")
   public void test_08(@Autowired MockMvc mockMvc) throws Exception {
-    mockMvc.perform(put(RESOURCE_URI + "/100").with(jwt())
+    when(mockRepository.existsById(10L)).thenReturn(false);
+    mockMvc.perform(put(RESOURCE_URI + "/10").with(jwt())
       .contentType(MediaType.APPLICATION_JSON)
       .content(mapper.writeValueAsString(
         new BlogPost(10L, "category", null, "title", "content", savedAuthor))))
-      .andExpect(status().isConflict());
+      .andExpect(status().isNotFound());
     verify(mockRepository, never()).save(any(BlogPost.class));
-    verifyNoMoreInteractions(mockRepository);
   }
 
   @Test
